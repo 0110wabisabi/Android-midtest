@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NotePad</string>
+    <string name="add_note">新建笔记</string>
+    <string name="new_note">新建笔记</string>
+    <string name="edit_note">编辑笔记</string>
+    <string name="hint_title">标题</string>
+    <string name="hint_content">开始记录…</string>
+    <string name="hint_search">搜索标题或内容</string>
+    <string name="category_label">分类：</string>
+    <string name="select_category">选择分类</string>
+    <string name="no_category">无分类</string>
+    <string name="save">保存</string>
+    <string name="delete">删除</string>
+    <string name="cancel">取消</string>
+    <string name="confirm_delete">确定删除这条笔记吗？</string>
+    <string name="search_notes">搜索笔记</string>
+    <string name="no_notes">还没有笔记，点击 + 开始吧</string>
+    <string name="no_results">没有找到相关笔记</string>
+    <string name="untitled">无标题</string>
+    <string name="sort_notes">排序</string>
+    <string name="sort_modified_desc">修改时间（最新在前）</string>
+    <string name="sort_modified_asc">修改时间（最早在前）</string>
+    <string name="sort_title_asc">标题（A-Z）</string>
+    <string name="sort_title_desc">标题（Z-A）</string>
+    <string name="filter_by_category">按分类筛选</string>
+    <string name="clear_filter">清除筛选</string>
+    <string name="all_notes">全部笔记</string>
+    <string name="filter_label">筛选：%s</string>
+</resources>
