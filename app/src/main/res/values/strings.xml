@@ -15,7 +15,7 @@
     <string name="cancel">取消</string>
     <string name="confirm_delete">确定删除这条笔记吗？</string>
     <string name="search_notes">搜索笔记</string>
-    <string name="no_notes">还没有笔记，点击 + 开始吧</string>
+    <string name="no_notes">还没有笔记，点击 ＋ 开始吧</string>
     <string name="no_results">没有找到相关笔记</string>
     <string name="untitled">无标题</string>
     <string name="sort_notes">排序</string>
@@ -27,4 +27,11 @@
     <string name="clear_filter">清除筛选</string>
     <string name="all_notes">全部笔记</string>
     <string name="filter_label">筛选：%s</string>
+    <string name="note_color">便签颜色</string>
+    <string name="bg_setting">更换背景</string>
+    <string name="bg_default">默认灰白</string>
+    <string name="bg_milk">奶黄色</string>
+    <string name="bg_lavender">淡紫色</string>
+    <string name="bg_mint">薄荷绿</string>
+    <string name="bg_sand">暖沙色</string>
 </resources>

@@ -20,11 +20,12 @@ class NotesDbAdapter(context: Context) {
         dbHelper.close()
     }
 
-    fun createNote(title: String, note: String, category: String): Long {
+    fun createNote(title: String, note: String, category: String, color: String = "#FFFFFF"): Long {
         val values = ContentValues().apply {
             put(KEY_TITLE, title)
             put(KEY_NOTE, note)
             put(KEY_CATEGORY, category)
+            put(KEY_COLOR, color)
             val now = System.currentTimeMillis()
             put(KEY_CREATED, now)
             put(KEY_MODIFIED, now)
@@ -33,11 +34,12 @@ class NotesDbAdapter(context: Context) {
         return db?.insert(TABLE, null, values) ?: -1
     }
 
-    fun updateNote(rowId: Long, title: String, note: String, category: String): Boolean {
+    fun updateNote(rowId: Long, title: String, note: String, category: String, color: String): Boolean {
         val values = ContentValues().apply {
             put(KEY_TITLE, title)
             put(KEY_NOTE, note)
             put(KEY_CATEGORY, category)
+            put(KEY_COLOR, color)
             put(KEY_MODIFIED, System.currentTimeMillis())
         }
         return db?.update(TABLE, values, "$KEY_ID=$rowId", null) == 1
@@ -91,6 +93,7 @@ class NotesDbAdapter(context: Context) {
             val tI = it.getColumnIndexOrThrow(KEY_TITLE)
             val nI = it.getColumnIndexOrThrow(KEY_NOTE)
             val cI = it.getColumnIndexOrThrow(KEY_CATEGORY)
+            val colorI = it.getColumnIndexOrThrow(KEY_COLOR)
             val crI = it.getColumnIndexOrThrow(KEY_CREATED)
             val mI = it.getColumnIndexOrThrow(KEY_MODIFIED)
             val pI = it.getColumnIndexOrThrow(KEY_PINNED)
@@ -101,6 +104,7 @@ class NotesDbAdapter(context: Context) {
                         title = it.getString(tI),
                         note = it.getString(nI) ?: "",
                         category = it.getString(cI) ?: "",
+                        color = it.getString(colorI) ?: "#FFFFFF",
                         created = it.getLong(crI),
                         modified = it.getLong(mI),
                         pinned = it.getInt(pI)
@@ -116,14 +120,15 @@ class NotesDbAdapter(context: Context) {
         const val KEY_TITLE = "title"
         const val KEY_NOTE = "note"
         const val KEY_CATEGORY = "category"
+        const val KEY_COLOR = "color"
         const val KEY_CREATED = "created"
         const val KEY_MODIFIED = "modified"
         const val KEY_PINNED = "pinned"
 
         private const val DB_NAME = "notepad.db"
         private const val TABLE = "notes"
-        private const val DB_VER = 2
-        private val ALL_KEYS = arrayOf(KEY_ID, KEY_TITLE, KEY_NOTE, KEY_CATEGORY, KEY_CREATED, KEY_MODIFIED, KEY_PINNED)
+        private const val DB_VER = 3
+        private val ALL_KEYS = arrayOf(KEY_ID, KEY_TITLE, KEY_NOTE, KEY_CATEGORY, KEY_COLOR, KEY_CREATED, KEY_MODIFIED, KEY_PINNED)
     }
 
     private class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VER) {
@@ -134,6 +139,7 @@ class NotesDbAdapter(context: Context) {
                     $KEY_TITLE TEXT NOT NULL,
                     $KEY_NOTE TEXT,
                     $KEY_CATEGORY TEXT DEFAULT '',
+                    $KEY_COLOR TEXT DEFAULT '#FFFFFF',
                     $KEY_CREATED INTEGER,
                     $KEY_MODIFIED INTEGER,
                     $KEY_PINNED INTEGER DEFAULT 0
@@ -148,6 +154,9 @@ class NotesDbAdapter(context: Context) {
                 db.execSQL("ALTER TABLE $TABLE ADD COLUMN $KEY_MODIFIED INTEGER")
                 db.execSQL("ALTER TABLE $TABLE ADD COLUMN $KEY_PINNED INTEGER DEFAULT 0")
             }
+            if (oldV < 3) {
+                db.execSQL("ALTER TABLE $TABLE ADD COLUMN $KEY_COLOR TEXT DEFAULT '#FFFFFF'")
+            }
         }
     }
 }
@@ -157,6 +166,7 @@ data class Note(
     val title: String,
     val note: String,
     val category: String,
+    val color: String,
     val created: Long,
     val modified: Long,
     val pinned: Int

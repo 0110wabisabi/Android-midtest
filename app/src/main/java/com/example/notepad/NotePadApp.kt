@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,6 +57,7 @@ fun NotePadApp(viewModel: NotePadViewModel) {
     var editingNote by remember { mutableStateOf<Note?>(null) }
     var showSortMenu by remember { mutableStateOf(false) }
     var showCategoryDialog by remember { mutableStateOf(false) }
+    var showBgDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { viewModel.refresh() }
 
@@ -64,10 +65,10 @@ fun NotePadApp(viewModel: NotePadViewModel) {
         NoteEditorScreen(
             note = editingNote,
             categories = categories,
-            onSave = { title, content, category ->
+            onSave = { title, content, category, color ->
                 val n = editingNote!!
-                if (n.id == -1L) viewModel.createNote(title, content, category)
-                else viewModel.updateNote(n.id, title, content, category)
+                if (n.id == -1L) viewModel.createNote(title, content, category, color)
+                else viewModel.updateNote(n.id, title, content, category, color)
                 editingNote = null
             },
             onDelete = {
@@ -92,6 +93,9 @@ fun NotePadApp(viewModel: NotePadViewModel) {
                     IconButton(onClick = { viewModel.toggleSearch(!showSearch) }) {
                         Text("🔍", fontSize = 22.sp, color = Color.White)
                     }
+                    IconButton(onClick = { showBgDialog = true }) {
+                        Text("🎨", fontSize = 22.sp, color = Color.White)
+                    }
                     IconButton(onClick = { showCategoryDialog = true }) {
                         Text("📂", fontSize = 22.sp, color = Color.White)
                     }
@@ -99,78 +103,41 @@ fun NotePadApp(viewModel: NotePadViewModel) {
                         Text("↕", fontSize = 22.sp, color = Color.White)
                     }
                     DropdownMenu(expanded = showSortMenu, onDismissRequest = { showSortMenu = false }) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.sort_modified_desc)) },
-                            onClick = { viewModel.setSort(NotePadViewModel.SORT_MODIFIED_DESC); showSortMenu = false }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.sort_modified_asc)) },
-                            onClick = { viewModel.setSort(NotePadViewModel.SORT_MODIFIED_ASC); showSortMenu = false }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.sort_title_asc)) },
-                            onClick = { viewModel.setSort(NotePadViewModel.SORT_TITLE_ASC); showSortMenu = false }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.sort_title_desc)) },
-                            onClick = { viewModel.setSort(NotePadViewModel.SORT_TITLE_DESC); showSortMenu = false }
-                        )
+                        DropdownMenuItem(text = { Text(stringResource(R.string.sort_modified_desc)) }, onClick = { viewModel.setSort(NotePadViewModel.SORT_MODIFIED_DESC); showSortMenu = false })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.sort_modified_asc)) }, onClick = { viewModel.setSort(NotePadViewModel.SORT_MODIFIED_ASC); showSortMenu = false })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.sort_title_asc)) }, onClick = { viewModel.setSort(NotePadViewModel.SORT_TITLE_ASC); showSortMenu = false })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.sort_title_desc)) }, onClick = { viewModel.setSort(NotePadViewModel.SORT_TITLE_DESC); showSortMenu = false })
                     }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { editingNote = Note(-1, "", "", "", 0, 0, 0) },
+                onClick = { editingNote = Note(-1, "", "", "", "#FFFFFF", 0, 0, 0) },
                 containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Text("＋", fontSize = 24.sp, color = Color.White)
-            }
+            ) { Text("＋", fontSize = 24.sp, color = Color.White) }
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
+        Column(Modifier.fillMaxSize().padding(padding)) {
             if (showSearch) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { viewModel.setSearchQuery(it) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
                     label = { Text(stringResource(R.string.hint_search)) },
                     singleLine = true
                 )
             }
-
             if (filterCategory != null) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.filter_label, filterCategory!!),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.filter_label, filterCategory!!), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(8.dp))
-                    TextButton(onClick = { viewModel.setCategoryFilter(null) }) {
-                        Text(stringResource(R.string.clear_filter))
-                    }
+                    TextButton(onClick = { viewModel.setCategoryFilter(null) }) { Text(stringResource(R.string.clear_filter)) }
                 }
             }
-
             if (notes.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        stringResource(R.string.no_notes),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text(stringResource(R.string.no_notes), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
                 LazyColumn(
@@ -179,12 +146,9 @@ fun NotePadApp(viewModel: NotePadViewModel) {
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(notes) { note ->
-                        NoteCard(
-                            note = note,
-                            onClick = { editingNote = note },
+                        NoteCard(note = note, onClick = { editingNote = note },
                             onTogglePinned = { viewModel.togglePinned(note.id, note.pinned) },
-                            onDelete = { viewModel.deleteNote(note.id) }
-                        )
+                            onDelete = { viewModel.deleteNote(note.id) })
                     }
                 }
             }
@@ -192,46 +156,38 @@ fun NotePadApp(viewModel: NotePadViewModel) {
     }
 
     if (showCategoryDialog) {
-        CategoryFilterDialog(
-            categories = categories,
+        CategoryFilterDialog(categories = categories,
             onSelect = { viewModel.setCategoryFilter(it); showCategoryDialog = false },
-            onDismiss = { showCategoryDialog = false }
-        )
+            onDismiss = { showCategoryDialog = false })
+    }
+    if (showBgDialog) {
+        BgChooserDialog(viewModel = viewModel, onDismiss = { showBgDialog = false })
     }
 }
 
 @Composable
-fun NoteCard(
-    note: Note,
-    onClick: () -> Unit,
-    onTogglePinned: () -> Unit,
-    onDelete: () -> Unit
-) {
+fun NoteCard(note: Note, onClick: () -> Unit, onTogglePinned: () -> Unit, onDelete: () -> Unit) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    val cardColor = try { Color(android.graphics.Color.parseColor(note.color)) } catch (_: Exception) { Color.White }
 
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.fillMaxWidth().padding(14.dp)) {
+            Column(Modifier.fillMaxWidth().padding(end = 96.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Box(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = note.title.ifBlank { stringResource(R.string.untitled) },
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.fillMaxWidth().padding(end = if (note.pinned == 1) 24.dp else 0.dp)
                     )
                     if (note.pinned == 1) {
-                        Text("📌", fontSize = 14.sp, modifier = Modifier.padding(start = 4.dp))
+                        Text("📌", fontSize = 14.sp, modifier = Modifier.align(Alignment.CenterEnd))
                     }
                 }
                 if (note.note.isNotEmpty()) {
@@ -240,47 +196,29 @@ fun NoteCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 2.dp)
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
-                Row(
-                    modifier = Modifier.padding(top = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = NotePadViewModel.formatTime(note.modified),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                    Text(text = NotePadViewModel.formatTime(note.modified), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (note.category.isNotEmpty()) {
                         Box(
-                            modifier = Modifier
-                                .padding(start = 8.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.primaryContainer,
-                                    RoundedCornerShape(8.dp)
-                                )
+                            modifier = Modifier.padding(start = 8.dp)
+                                .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(8.dp))
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
-                            Text(
-                                text = note.category,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+                            Text(note.category, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
                         }
                     }
                 }
             }
-            IconButton(onClick = onTogglePinned) {
-                Text(
-                    if (note.pinned == 1) "★" else "☆",
-                    fontSize = 22.sp,
-                    color = if (note.pinned == 1) Color(0xFFFFB300) else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            IconButton(onClick = { showDeleteConfirm = true }) {
-                Text("🗑", fontSize = 22.sp, color = MaterialTheme.colorScheme.error)
+            Row(modifier = Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onTogglePinned) {
+                    Text(if (note.pinned == 1) "★" else "☆", fontSize = 22.sp, color = if (note.pinned == 1) Color(0xFFFFB300) else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                IconButton(onClick = { showDeleteConfirm = true }) {
+                    Text("🗑", fontSize = 22.sp, color = MaterialTheme.colorScheme.error)
+                }
             }
         }
     }
@@ -289,49 +227,61 @@ fun NoteCard(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             title = { Text(stringResource(R.string.confirm_delete)) },
-            confirmButton = {
-                TextButton(onClick = { onDelete(); showDeleteConfirm = false }) {
-                    Text(stringResource(R.string.delete))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
+            confirmButton = { TextButton(onClick = { onDelete(); showDeleteConfirm = false }) { Text(stringResource(R.string.delete)) } },
+            dismissButton = { TextButton(onClick = { showDeleteConfirm = false }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 }
 
 @Composable
-fun CategoryFilterDialog(
-    categories: List<String>,
-    onSelect: (String?) -> Unit,
-    onDismiss: () -> Unit
-) {
+fun CategoryFilterDialog(categories: List<String>, onSelect: (String?) -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.filter_by_category)) },
         text = {
             Column {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onSelect(null) }
-                        .padding(vertical = 12.dp)
-                ) { Text(stringResource(R.string.all_notes)) }
+                Row(Modifier.fillMaxWidth().clickable { onSelect(null) }.padding(vertical = 12.dp)) { Text(stringResource(R.string.all_notes)) }
                 categories.forEach { cat ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelect(cat) }
-                            .padding(vertical = 12.dp)
-                    ) { Text(cat) }
+                    Row(Modifier.fillMaxWidth().clickable { onSelect(cat) }.padding(vertical = 12.dp)) { Text(cat) }
                 }
             }
         },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
-        }
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
+    )
+}
+
+@Composable
+fun BgChooserDialog(viewModel: NotePadViewModel, onDismiss: () -> Unit) {
+    val current by viewModel.appBg.collectAsState()
+    val options = listOf(
+        NotePadViewModel.BG_DEFAULT to stringResource(R.string.bg_default),
+        NotePadViewModel.BG_MILK to stringResource(R.string.bg_milk),
+        NotePadViewModel.BG_LAVENDER to stringResource(R.string.bg_lavender),
+        NotePadViewModel.BG_MINT to stringResource(R.string.bg_mint),
+        NotePadViewModel.BG_SAND to stringResource(R.string.bg_sand)
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.bg_setting)) },
+        text = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                options.forEach { (key, label) ->
+                    val bgColor = when (key) {
+                        NotePadViewModel.BG_MILK -> Color(0xFFFDF6E3)
+                        NotePadViewModel.BG_LAVENDER -> Color(0xFFF3E5F5)
+                        NotePadViewModel.BG_MINT -> Color(0xFFE8F5E9)
+                        NotePadViewModel.BG_SAND -> Color(0xFFFBE9E7)
+                        else -> Color(0xFFF5F7FA)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.clickable { viewModel.setAppBg(key); onDismiss() }) {
+                        Box(Modifier.width(40.dp).height(40.dp).background(bgColor, RoundedCornerShape(12.dp)))
+                        Text(label, fontSize = 11.sp, modifier = Modifier.padding(top = 4.dp))
+                        if (key == current) Text("✓", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
 }

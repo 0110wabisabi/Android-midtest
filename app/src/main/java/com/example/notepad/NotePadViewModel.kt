@@ -1,6 +1,8 @@
 package com.example.notepad
 
 import android.app.Application
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +17,7 @@ import java.util.Locale
 class NotePadViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = NotesDbAdapter(application).apply { open() }
+    private val prefs: SharedPreferences = application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val _notes = MutableStateFlow<List<Note>>(emptyList())
     val notes: StateFlow<List<Note>> = _notes.asStateFlow()
@@ -34,6 +37,9 @@ class NotePadViewModel(application: Application) : AndroidViewModel(application)
     private val _showSearch = MutableStateFlow(false)
     val showSearch: StateFlow<Boolean> = _showSearch.asStateFlow()
 
+    private val _appBg = MutableStateFlow(prefs.getString(KEY_APP_BG, BG_DEFAULT) ?: BG_DEFAULT)
+    val appBg: StateFlow<String> = _appBg.asStateFlow()
+
     fun refresh() {
         viewModelScope.launch(Dispatchers.IO) {
             val sqlSort = when (_sortOrder.value) {
@@ -52,21 +58,18 @@ class NotePadViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun createNote(title: String, content: String, category: String): Long {
-        val id = db.createNote(title, content, category)
+    fun createNote(title: String, content: String, category: String, color: String): Long {
+        val id = db.createNote(title, content, category, color)
         refresh()
         return id
     }
 
-    fun updateNote(id: Long, title: String, content: String, category: String) {
-        db.updateNote(id, title, content, category)
+    fun updateNote(id: Long, title: String, content: String, category: String, color: String) {
+        db.updateNote(id, title, content, category, color)
         refresh()
     }
 
-    fun deleteNote(id: Long) {
-        db.deleteNote(id)
-        refresh()
-    }
+    fun deleteNote(id: Long) { db.deleteNote(id); refresh() }
 
     fun togglePinned(id: Long, pinned: Int) {
         db.togglePinned(id, if (pinned == 1) 0 else 1)
@@ -81,6 +84,11 @@ class NotePadViewModel(application: Application) : AndroidViewModel(application)
         if (!show) { _searchQuery.value = ""; refresh() }
     }
 
+    fun setAppBg(bg: String) {
+        _appBg.value = bg
+        prefs.edit().putString(KEY_APP_BG, bg).apply()
+    }
+
     override fun onCleared() { db.close(); super.onCleared() }
 
     companion object {
@@ -88,6 +96,24 @@ class NotePadViewModel(application: Application) : AndroidViewModel(application)
         const val SORT_MODIFIED_ASC = "modified_asc"
         const val SORT_TITLE_ASC = "title_asc"
         const val SORT_TITLE_DESC = "title_desc"
+
+        private const val PREFS_NAME = "notepad_prefs"
+        private const val KEY_APP_BG = "app_bg"
+        const val BG_DEFAULT = "default"
+        const val BG_MILK = "milk"
+        const val BG_LAVENDER = "lavender"
+        const val BG_MINT = "mint"
+        const val BG_SAND = "sand"
+
+        val NOTE_COLORS = listOf(
+            "#FFFFFF",   // 默认白
+            "#FFF9C4",   // 黄
+            "#FFCDD2",   // 粉
+            "#BBDEFB",   // 蓝
+            "#C8E6C9",   // 绿
+            "#E1BEE7",   // 紫
+            "#FFE0B2"    // 橙
+        )
 
         fun formatTime(ts: Long): String {
             val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
